@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Web.Http;
 using System.Web.Mvc;
@@ -10,27 +9,23 @@ namespace SimpleAPI.Controllers
 {
     public class OrdersController : ApiController
     {
-        private readonly ConnectionFactory _connectionFactory;
+        private readonly DataLayer _dataLayer;
 
         public OrdersController()
         {
-            _connectionFactory = new ConnectionFactory();
+            _dataLayer = new DataLayer();
         }
 
         [System.Web.Http.HttpGet]
         public ActionResult ForCustomer(string id)
         {
-            var connection = (SqlConnection)_connectionFactory.Create();
-            connection.Open();
+            var storedProcedureName = "CustOrdersOrders";
+            var parameters = new List<SqlParameter>
+            {
+                new SqlParameter("@CustomerID", id)
+            };
 
-            var command = connection.CreateCommand();
-            command.CommandText = "CustOrdersOrders";
-            command.CommandType = CommandType.StoredProcedure;
-
-            var customerIdParameter = new SqlParameter("@CustomerID", id);
-            command.Parameters.Add(customerIdParameter);
-
-            var reader = command.ExecuteReader();
+            var reader  = _dataLayer.RunStoredProcedure(storedProcedureName, parameters);
 
             var orders = new List<Order>();
             while (reader.Read())
